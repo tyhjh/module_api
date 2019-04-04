@@ -1,0 +1,99 @@
+def includeWithApi(String moduleName) {
+    //先正常加载这个模块
+    include(moduleName)
+    //找到这个模块的路径
+    String originDir = project(moduleName).projectDir
+    //这个是新的路径
+    String targetDir = "${originDir}-api"
+    //新模块的名字
+    def sdkName = "${project(moduleName).name}-api"
+
+    //这个是公共模块的位置，我预先放了一个 新建的api.gradle 文件进去
+    String apiGradle = project(":commonlibrary").projectDir
+
+    // 每次编译删除之前的文件
+    deleteDir(targetDir)
+
+    //复制.api文件到新的路径
+    copy() {
+        from originDir
+        into targetDir
+        exclude '**/build/'
+        exclude '**/res/'
+        include '**/*.api'
+    }
+
+    //直接复制公共模块的AndroidManifest文件到新的路径，作为该模块的文件
+    copy() {
+        from "${apiGradle}/src/main/AndroidManifest.xml"
+        into "${targetDir}/src/main/"
+    }
+
+    //复制 gradle文件到新的路径，作为该模块的gradle
+    copy() {
+        from "${apiGradle}/api.gradle"
+        into "${targetDir}/"
+    }
+
+    //删除空文件夹
+    deleteEmptyDir(new File(targetDir))
+
+    //重命名一下gradle
+    def build = new File(targetDir + "/api.gradle")
+    if (build.exists()) {
+        build.renameTo(new File(targetDir + "/build.gradle"))
+    }
+
+    // 重命名.api文件，生成正常的.java文件
+    renameApiFiles(targetDir, '.api', '.java')
+
+    //正常加载新的模块
+    include ":$sdkName"
+}
+
+
+private void deleteEmptyDir(File dir) {
+    if (dir.isDirectory()) {
+        File[] fs = dir.listFiles();
+        if (fs != null && fs.length > 0) {
+            for (int i = 0; i < fs.length; i++) {
+                File tmpFile = fs[i];
+                if (tmpFile.isDirectory()) {
+                    deleteEmptyDir(tmpFile);
+                }
+                if (tmpFile.isDirectory() && tmpFile.listFiles().length <= 0) {
+                    tmpFile.delete();
+                }
+            }
+        }
+        if (dir.isDirectory() && dir.listFiles().length == 0) {
+            dir.delete();
+        }
+    }
+}
+
+private void deleteDir(String targetDir) {
+    FileTree targetFiles = fileTree(targetDir)
+    targetFiles.exclude "*.iml"
+    targetFiles.each { File file ->
+        file.delete()
+    }
+}
+
+/**
+ * rename api files(java, kotlin...)
+ */
+private def renameApiFiles(root_dir, String suffix, String replace) {
+    FileTree files = fileTree(root_dir).include("**/*$suffix")
+    files.each {
+        File file ->
+            file.renameTo(new File(file.absolutePath.replace(suffix, replace)))
+    }
+}
+
+
+
+include ':app', ':commonlibrary', ':other'
+includeWithApi ":user"
+
+
