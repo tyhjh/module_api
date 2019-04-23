@@ -34,6 +34,6 @@ dependencies {
 
     implementation project(":user")
     annotationProcessor 'com.alibaba:arouter-compiler:1.2.2'
-    implementation project(":commonlibrary")
+    implementation project(':baselibrary')
     implementation project(":other")
 }

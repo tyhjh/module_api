@@ -5,11 +5,14 @@ def includeWithApi(String moduleName) {
     String originDir = project(moduleName).projectDir
     //这个是新的路径
     String targetDir = "${originDir}-api"
-    //新模块的名字
+    //新模块的路径
     def sdkName = "${project(moduleName).name}-api"
+    //新模块名字
+    String apiName="${moduleName.substring(1,moduleName.length())}-api"
+
 
     //这个是公共模块的位置，我预先放了一个 新建的api.gradle 文件进去
-    String apiGradle = project(":commonlibrary").projectDir
+    String apiGradle = project(":baselibrary").projectDir
 
     // 每次编译删除之前的文件
     deleteDir(targetDir)
@@ -28,6 +31,11 @@ def includeWithApi(String moduleName) {
         from "${apiGradle}/src/main/AndroidManifest.xml"
         into "${targetDir}/src/main/"
     }
+
+    //file("${targetDir}/src/main/java/com/dhht/${apiName}/").mkdirs()
+
+    //修改AndroidManifest文件
+    //fileReader("${targetDir}/src/main/AndroidManifest.xml",apiName);
 
     //复制 gradle文件到新的路径，作为该模块的gradle
     copy() {
@@ -92,8 +100,35 @@ private def renameApiFiles(root_dir, String suffix, String replace) {
 }
 
 
+//这里是替换掉commonlibrary这个字段
+def fileReader(path,target_package) {
+    def readerString = "";
+    def hasReplace = false
 
-include ':app', ':commonlibrary', ':other'
+    file(path).withReader('UTF-8') { reader ->
+        reader.eachLine {
+            if (it.find(".commonlibrary")) {
+                it = it.replace(".commonlibrary", "")
+                hasReplace = true
+            }
+            readerString <<= it
+            readerString << '\n'
+        }
+
+        if (hasReplace) {
+            println(path + " has replace package.")
+            file(path).withWriter('UTF-8') {
+                within ->
+                    within.append(readerString)
+            }
+        }
+        return readerString
+    }
+}
+
+
+include ':app', ':baselibrary'
 includeWithApi ":user"
+includeWithApi ":other"
 
 

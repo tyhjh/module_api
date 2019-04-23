@@ -3,7 +3,6 @@ package com.dhht.other;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.alibaba.android.arouter.facade.annotation.Autowired;
@@ -22,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         ARouter.getInstance().inject(this);
         setContentView(R.layout.other_activity_main);
+
+
         //mUserService=ARouter.getInstance().navigation(UserService.class);
 
         findViewById(R.id.btHello).setOnClickListener(new View.OnClickListener() {

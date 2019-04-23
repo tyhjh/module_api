@@ -27,6 +27,12 @@ android {
         }
     }
 
+    sourceSets {
+        main {
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+        }
+    }
+
 }
 
 dependencies {
@@ -38,5 +44,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     annotationProcessor 'com.alibaba:arouter-compiler:1.2.2'
-    implementation project(":commonlibrary")
+    implementation project(":baselibrary")
 }
