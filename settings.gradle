@@ -5,12 +5,12 @@ def includeWithApi(String moduleName) {
     String originDir = project(moduleName).projectDir
     //这个是新的路径
     String targetDir = "${originDir}-api"
-    //新模块的路径
-    def sdkName = "${project(moduleName).name}-api"
-    //新模块名字
-    String apiName="${moduleName.substring(1,moduleName.length())}-api"
+    //原模块的名字
+    String originName=project(moduleName).name;
+    //新模块的名字
+    def sdkName = "${originName}-api"
 
-
+    //todo 替换成自己的公共模块，或者预先放api.gradle的模块
     //这个是公共模块的位置，我预先放了一个 新建的api.gradle 文件进去
     String apiGradle = project(":baselibrary").projectDir
 
@@ -26,16 +26,12 @@ def includeWithApi(String moduleName) {
         include '**/*.api'
     }
 
+
     //直接复制公共模块的AndroidManifest文件到新的路径，作为该模块的文件
     copy() {
         from "${apiGradle}/src/main/AndroidManifest.xml"
         into "${targetDir}/src/main/"
     }
-
-    //file("${targetDir}/src/main/java/com/dhht/${apiName}/").mkdirs()
-
-    //修改AndroidManifest文件
-    //fileReader("${targetDir}/src/main/AndroidManifest.xml",apiName);
 
     //复制 gradle文件到新的路径，作为该模块的gradle
     copy() {
@@ -45,6 +41,18 @@ def includeWithApi(String moduleName) {
 
     //删除空文件夹
     deleteEmptyDir(new File(targetDir))
+
+
+    //todo 替换成自己的包名，这里是 com/dhht/
+    //为AndroidManifest新建路径，路径就是在原来的包下面新建一个api包，作为AndroidManifest里面的包名
+    String packagePath = "${targetDir}/src/main/java/com/dhht/${originName}/api";
+
+
+    //todo 替换成自己的包名，这里是baselibrary模块拷贝的AndroidManifest，替换里面的包名
+    //修改AndroidManifest文件包路径
+    fileReader("${targetDir}/src/main/AndroidManifest.xml", "commonlibrary","${originName}.api");
+
+    new File(packagePath).mkdirs()
 
     //重命名一下gradle
     def build = new File(targetDir + "/api.gradle")
@@ -58,7 +66,6 @@ def includeWithApi(String moduleName) {
     //正常加载新的模块
     include ":$sdkName"
 }
-
 
 private void deleteEmptyDir(File dir) {
     if (dir.isDirectory()) {
@@ -99,16 +106,15 @@ private def renameApiFiles(root_dir, String suffix, String replace) {
     }
 }
 
-
-//这里是替换掉commonlibrary这个字段
-def fileReader(path,target_package) {
+//替换AndroidManifest里面的字段
+def fileReader(path, name,sdkName) {
     def readerString = "";
     def hasReplace = false
 
     file(path).withReader('UTF-8') { reader ->
         reader.eachLine {
-            if (it.find(".commonlibrary")) {
-                it = it.replace(".commonlibrary", "")
+            if (it.find(name)) {
+                it = it.replace(name, sdkName)
                 hasReplace = true
             }
             readerString <<= it
@@ -116,7 +122,6 @@ def fileReader(path,target_package) {
         }
 
         if (hasReplace) {
-            println(path + " has replace package.")
             file(path).withWriter('UTF-8') {
                 within ->
                     within.append(readerString)

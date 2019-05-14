@@ -10,6 +10,12 @@ import com.alibaba.android.arouter.facade.annotation.Route;
  */
 @Route(path = "/user/UserService")
 public class UserServiceImpl implements UserService {
+
+
+    public UserServiceImpl() {
+
+    }
+
     @Override
     public UserInfo getUser() {
         return new UserInfo("Tyhj");
